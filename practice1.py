@@ -1,8 +1,3 @@
-"""
-Practice1
-2017030064 Yoon Hyewon
-"""
-# sklearn.linear_model
 import numpy as np
 import random
 import math
@@ -68,44 +63,33 @@ def updateSlowly(x1_train, x2_train, y_train, K, alpha, w, b):
 
     return w, b, J
 
-def updateFastly(x1_train, x2_train, y_train, K, alpha, w, b):
-    J = 0
-    dw = 0
-    db = 0
-
+def updateFastly(x1_train, x2_train, y_train, K, alpha, W, b):
     m = len(x1_train)
     
-    z = np.zeros(m)
-    a = np.zeros(m)
-    dz = np.zeros(m)
-
     X = np.array([x1_train, x2_train])
-
+    Y = np.array(y_train).reshape(1, m)
+    
     for k in range(K):
-        z = np.dot(w,X) + b
-        a = 1 / (1 + np.exp(-z))
-        J += -(np.dot(y_train, np.log10(a)) + np.dot((1 - np.array(y_train)), np.log10(1-a)))
-        dz = a - y_train
-        dw += np.dot(X, dz)
-        db += np.sum(dz)
-
-        J /= m
-        dw /= m
-        db /= m
-
+        Z = np.dot(W.T, X) + b
+        A = 1 / (1 + np.exp(-Z))
+        J = -(np.dot(Y, np.log10(A.T)) + np.dot((1 - Y), np.log10(1-A.T))) / m
+        dZ = A - Y
+        dW = np.dot(X, dZ.T) / m
+        db = np.sum(dZ) / m
+        
         # update
-        w -= alpha * dw
-        b -= alpha * db
+        W = W - alpha * dW
+        b = b - alpha * db
 
         if k % 10 == 0 and k != K-1:
-            print("W: " + str(w)) 
+            print("W: " + str(W)) 
             print("b: " + str(b))
 
-    print("W: " + str(w))
+    print("W: " + str(W))
     print("b: " + str(b))
     print("J: " + str(J))
 
-    return w, b, J
+    return W, b, J
 
 def slowTest(x1_test, x2_test, y_test, w, b):
     J = 0
@@ -129,13 +113,11 @@ def slowTest(x1_test, x2_test, y_test, w, b):
 
     return J
 
-def fastTest(x1_test, x2_test, y_test, w, b):
-    J = 0
-
+def fastTest(x1_test, x2_test, y_test, W, b):
     X = [x1_test, x2_test]
-    z = np.dot(w, X) + b
-    a = 1 / (1 + np.exp(-z))
-    J += -(np.dot(y_test, np.log10(a)) + np.dot((1 - np.array(y_test)), np.log10(1-a)))
+    Z = np.dot(W.T, X) + b
+    a = 1 / (1 + np.exp(-Z))
+    J = -(np.dot(y_test, np.log10(a).T) + np.dot((1 - np.array(y_test)), np.log10(1-a).T))
     
     J /= len(x1_test)
 
@@ -144,14 +126,14 @@ def fastTest(x1_test, x2_test, y_test, w, b):
     return J
 
 def predictSlowly(w, b, x):
-    y_hat = w[0]*x[0] + w[1]*x[1] + b
-    prob = 1/(1+np.exp(-y_hat))
-    return int(prob + 0.5)
+    z = w[0]*x[0] + w[1]*x[1] + b
+    y_hat = 1/(1+np.exp(-z))
+    return int(y_hat + 0.5)
 
-def predictFastly(w, b, x):
-    y_hat = np.dot(w, x) + b
-    prob = 1/(1+np.exp(-y_hat))
-    return int(prob + 0.5)
+def predictFastly(W, b, x):
+    z = np.dot(W.T, x) + b
+    y_hat = 1/(1+np.exp(-z))
+    return int(y_hat + 0.5)
 
 def getAccuracySlowly(w, b, x1_train, x2_train, y_train):
     correct = 0
@@ -174,16 +156,16 @@ def main():
     Input: 2-dim vector, 𝒙 = {𝑥1, 𝑥2}
     Output: label of the input, y ∈ {0,1}
     """
-    m = 1000
-    n = 100
-    K = 2000
-    alpha = 0.01
+    m = 1000 # the number of train sample
+    n = 100 # the number of test sample
+    K = 2000 # the number of update
+    alpha = 0.001
 
-    # Step 1. Generate 1000(=m) train samples, 100(=n) test samples:
+    # Step 1. Generate samples:
     x1_train, x2_train, y_train = generateSamples(m)
     x1_test, x2_test, y_test = generateSamples(n)
 
-    w = [0.000000000000000001,0.000000000000000001]
+    W = np.array([0.000000000000000001,0.000000000000000001]).reshape(2,1)
     b = 0
 
     vectorized = True
@@ -193,38 +175,38 @@ def main():
         # Step 2. Update W = [w1 , w2 ], b with 1000 samples for 2000 (=K) iterations: #K updates with the grad descent
         # Step 2-1. print W, b every 10 iterations
         start = time.time()
-        w, b, cost = updateSlowly(x1_train, x2_train, y_train, K, alpha, w, b)
+        W, b, cost = updateSlowly(x1_train, x2_train, y_train, K, alpha, W, b)
         
         # Step 2-2. calculate the cost on the 'm' train samples!
         # cost = slowTest(x1_train, x2_train, y_train, w, b)
         print("cost for train samples : " + str(cost))
 
         # Step 2-3. calculate the cost with the 'n' test samples!
-        cost = slowTest(x1_test, x2_test, y_test, w, b)
+        cost = slowTest(x1_test, x2_test, y_test, W, b)
         print("cost for test samples : " + str(cost))
 
         # Step 2-4. print accuracy for the 'm' train samples! (display the number of correctly predicted outputs/m*100)
-        print("accuracy for 'm' train samples: " + str(getAccuracySlowly(w, b, x1_train, x2_train, y_train)))
+        print("accuracy for 'm' train samples: " + str(getAccuracySlowly(W, b, x1_train, x2_train, y_train)))
         # Step 2-5. print accuracy with the 'n' test samples! (display the number of correctly predicted outputs/n*100)
-        print("accuracy for 'n' test samples: " + str(getAccuracySlowly(w, b, x1_test, x2_test, y_test)))
+        print("accuracy for 'n' test samples: " + str(getAccuracySlowly(W, b, x1_test, x2_test, y_test)))
         
         print("element-wise time :", time.time() - start)
 
     else:
         # vectorized
         start = time.time()
-        w, b, cost = updateFastly(x1_train, x2_train, y_train, K, alpha, w, b)
+        W, b, cost = updateFastly(x1_train, x2_train, y_train, K, alpha, W, b)
 
         # cost = fastTest(x1_train, x2_train, y_train, w, b)
         print("cost for train samples : " + str(cost))
 
-        cost = fastTest(x1_test, x2_test, y_test, w, b)
+        cost = fastTest(x1_test, x2_test, y_test, W, b)
         print("cost for test samples : " + str(cost))
 
         # Step 2-4. print accuracy for the 'm' train samples! (display the number of correctly predicted outputs/m*100)
-        print("accuracy for 'm' train samples: " + str(getAccuracyFastly(w, b, x1_train, x2_train, y_train)))
+        print("accuracy for 'm' train samples: " + str(getAccuracyFastly(W, b, x1_train, x2_train, y_train)))
         # Step 2-5. print accuracy with the 'n' test samples! (display the number of correctly predicted outputs/n*100)
-        print("accuracy for 'n' test samples: " + str(getAccuracyFastly(w, b, x1_test, x2_test, y_test)))
+        print("accuracy for 'n' test samples: " + str(getAccuracyFastly(W, b, x1_test, x2_test, y_test)))
         
         print("vectorized time :", time.time() - start)
 
