@@ -94,7 +94,7 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
     for k in range(K):
         # forward
         Z1 = np.dot(W1.T, X) + b1
-        A1 = sigmoid(Z1)
+        A1 = ReLU(Z1.reshape(m))
         Z2 = np.dot(W2.T, A1) + b2
         A2 = sigmoid(Z2)
 
@@ -104,7 +104,7 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
         dZ2 = d_sigmoid(A2, Y)
         dW2 = np.dot(A1, dZ2.T) / m
         db2 = np.sum(dZ2) / m
-        dZ1 = d_sigmoid(A1, Y)
+        dZ1 = d_ReLU(A1.reshape(m))
         dW1 = np.dot(X, dZ1.T) / m
         db1 = np.sum(dZ1) / m
         
@@ -129,8 +129,10 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
     return W1, b1, W2, b2, J
 
 def test(X, Y, W1, b1, W2, b2):
+    n = len(Y)
+
     Z1 = np.dot(W1.T, X) + b1
-    A1 = sigmoid(Z1)
+    A1 = ReLU(Z1.reshape(n))
     Z2 = np.dot(W2.T, A1) + b2
     A2 = sigmoid(Z2)
 
@@ -142,7 +144,7 @@ def test(X, Y, W1, b1, W2, b2):
 
 def predict(W1, b1, W2, b2, x):
     z1 = np.dot(W1.T, x) + b1
-    a1 = sigmoid(z1)
+    a1 = ReLU(z1)
     z2 = np.dot(W2.T, a1) + b2
     a2 = sigmoid(z2)
     return int(a2 + 0.5)
@@ -171,9 +173,9 @@ def main():
     X_train, Y_train = loadSamples(m, "train_samples.txt")
     X_test, Y_test = loadSamples(n, "test_samples.txt")
 
-    W1 = np.array([1677, 2277], np.float128).reshape(2,1)
-    b1 = -1.4
-    W2 = np.array([-46], np.float128)
+    W1 = np.array([1619, 2171], np.float128).reshape(2,1)
+    b1 = -26
+    W2 = np.array([8], np.float128)
     b2 = -297.
 
     # vectorized
