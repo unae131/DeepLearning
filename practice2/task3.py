@@ -66,22 +66,28 @@ def d_sigmoid(A, Y):
 
 def ReLU(Z):
     A = []
-    for z in Z[0]:
-        if z <= 0:
-            A.append(0)
-        else:
-            A.append(z)
+    for row in Z:
+        a = []
+        for z in row:
+            if z <= 0:
+                a.append(0)
+            else:
+                a.append(z)
+        A.append(a)
     
-    return np.array(A).reshape(1, len(A))
+    return np.array(A, dtype= np.float128)
 
 def d_ReLU(A):
     dZ = []
-    for a in A[0]:
-        if a <= 0:
-            dZ.append(0)
-        else:
-            dZ.append(1)
-    return np.array(dZ).reshape(1, len(dZ))
+    for row in A:
+        dz = []
+        for a in row:
+            if a <= 0:
+                dz.append(0)
+            else:
+                dz.append(1)
+        dZ.append(dz)
+    return np.array(dZ, dtype= np.float128)
 
 def cross_entropy_loss(Y, Y_hat):
     m = len(Y)
@@ -94,7 +100,7 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
     for k in range(K):
         # forward
         Z1 = np.dot(W1.T, X) + b1
-        A1 = sigmoid(Z1)
+        A1 = ReLU(Z1)
         Z2 = np.dot(W2.T, A1) + b2
         A2 = sigmoid(Z2)
 
@@ -104,7 +110,7 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
         dZ2 = d_sigmoid(A2, Y)
         dW2 = np.dot(A1, dZ2.T) / m
         db2 = np.sum(dZ2) / m
-        dZ1 = d_sigmoid(A1, Y)
+        dZ1 = d_ReLU(A1)
         dW1 = np.dot(X, dZ1.T) / m
         db1 = np.sum(dZ1) / m
         
@@ -129,8 +135,10 @@ def update(X, Y, K, alpha, W1, b1, W2, b2):
     return W1, b1, W2, b2, J
 
 def test(X, Y, W1, b1, W2, b2):
+    n = len(Y)
+
     Z1 = np.dot(W1.T, X) + b1
-    A1 = sigmoid(Z1)
+    A1 = ReLU(Z1)
     Z2 = np.dot(W2.T, A1) + b2
     A2 = sigmoid(Z2)
 
@@ -142,7 +150,7 @@ def test(X, Y, W1, b1, W2, b2):
 
 def predict(W1, b1, W2, b2, x):
     z1 = np.dot(W1.T, x) + b1
-    a1 = sigmoid(z1)
+    a1 = [z if z > 0 else 0 for z in z1]
     z2 = np.dot(W2.T, a1) + b2
     a2 = sigmoid(z2)
     return int(a2 + 0.5)
@@ -171,13 +179,11 @@ def main():
     X_train, Y_train = loadSamples(m, "train_samples.txt")
     X_test, Y_test = loadSamples(n, "test_samples.txt")
 
-    W1 = np.array([[1677, 2277],
-                    [1500, 1500],
-                    [1500,1555]],
-                     np.float128).T
-    b1 = -1.4
-    W2 = np.array([-46, 15, 15], np.float128)
-    b2 = -297.
+    W1 = np.array([[1619.75772464, 1420.44288296, 1423.28102635],
+                    [2171.48707606, 1413.96673169, 1466.16849836]], dtype = np.float128)
+    b1 = -76.141087000000002634
+    W2 = np.array([-3.71621728, 63.48923154, 64.03892343], dtype = np.float128)
+    b2 = -296.99185122385645214
 
     # vectorized
     # Step 2. Update W = [w1 , w2 ], b with 1000 samples for 2000 (=K) iterations: #K updates with the grad descent
@@ -186,7 +192,6 @@ def main():
     W1, b1, W2, b2, cost = update(X_train, Y_train, K, alpha, W1, b1, W2, b2)
 
     # Step 2-2. calculate the cost on the 'm' train samples!
-    # cost = fastTest(x1_train, x2_train, y_train, w, b)
     print("cost for train samples : " + str(cost))
 
     # Step 2-3. calculate the cost with the 'n' test samples!
