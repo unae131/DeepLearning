@@ -1,8 +1,13 @@
+"""
+@ Binary classification using logistic regression(cross-entropy loss)
+"""
+
 import numpy as np
 import random
 import math
 import time
 import os.path
+EPSILON = 0.0000000000000000001
 
 def loadSamples(m, fileName):
     if not os.path.exists(fileName):
@@ -54,13 +59,18 @@ def generateSamples(m, fileName):
 
     return X, Y
 
+def cross_entropy_loss(Y, Y_hat):
+    m = len(Y)
+    J = -(np.dot(Y, np.log10(Y_hat.T+EPSILON)) + np.dot((1 - Y), np.log10(1-Y_hat.T+EPSILON))) / m
+    return J
+
 def update(X, Y, K, alpha, W, b):
     m = len(X[0])
     
     for k in range(K):
         Z = np.dot(W.T, X) + b
         A = 1 / (1 + np.exp(-Z))
-        J = -(np.dot(Y, np.log10(A.T)) + np.dot((1 - Y), np.log10(1-A.T))) / m
+        J = cross_entropy_loss(Y, A)
         dZ = A - Y
         dW = np.dot(X, dZ.T) / m
         db = np.sum(dZ) / m
@@ -84,7 +94,7 @@ def test(X, Y, W, b):
 
     Z = np.dot(W.T, X) + b
     A = 1 / (1 + np.exp(-Z))
-    J = -(np.dot(Y, np.log10(A.T)) + np.dot((1 - Y), np.log10(1-A.T))) / m
+    J = cross_entropy_loss(Y, A)
 
     # print("test J: " + str(J))
 
@@ -92,8 +102,8 @@ def test(X, Y, W, b):
 
 def predict(W, b, x):
     z = np.dot(W.T, x) + b
-    y_hat = 1/(1+np.exp(-z))
-    return int(y_hat + 0.5)
+    a = 1/(1+np.exp(-z))
+    return int(a + 0.5)
 
 def getAccuracy(W, b, X, Y):
     m = len(X[0])
@@ -130,10 +140,13 @@ def main():
 
     # Step 2-2. calculate the cost on the 'm' train samples!
     # cost = fastTest(x1_train, x2_train, y_train, w, b)
+    print("train time :", time.time() - start)
     print("cost for train samples : " + str(cost))
 
     # Step 2-3. calculate the cost with the 'n' test samples!
+    start = time.time()
     cost = test(X_test, Y_test, W, b)
+    print("test time :", '{0:.6f}'.format(time.time() - start))
     print("cost for test samples : " + str(cost))
 
     # Step 2-4. print accuracy for the 'm' train samples! (display the number of correctly predicted outputs/m*100)
@@ -141,7 +154,6 @@ def main():
     # Step 2-5. print accuracy with the 'n' test samples! (display the number of correctly predicted outputs/n*100)
     print("accuracy for 'n' test samples: " + str(getAccuracy(W, b, X_test, Y_test)))
     
-    print("time :", time.time() - start)
 
 
 if __name__ == "__main__":

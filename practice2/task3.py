@@ -192,10 +192,13 @@ def main():
     W1, b1, W2, b2, cost = update(X_train, Y_train, K, alpha, W1, b1, W2, b2)
 
     # Step 2-2. calculate the cost on the 'm' train samples!
+    print("train time :", time.time() - start)
     print("cost for train samples : " + str(cost))
 
     # Step 2-3. calculate the cost with the 'n' test samples!
+    start = time.time()
     cost = test(X_test, Y_test, W1, b1, W2, b2)
+    print("test time :", time.time() - start)
     print("cost for test samples : " + str(cost))
 
     # Step 2-4. print accuracy for the 'm' train samples! (display the number of correctly predicted outputs/m*100)
