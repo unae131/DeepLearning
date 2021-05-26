@@ -4,7 +4,6 @@
 
 import numpy as np
 import random
-import math
 import time
 import os.path
 EPSILON = 0.0000000000000000001

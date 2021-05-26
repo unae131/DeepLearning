@@ -1,3 +1,7 @@
+"""
+@ Compare the computation time with or without vectorization
+"""
+
 import numpy as np
 import random
 import math
