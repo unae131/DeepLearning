@@ -4,22 +4,57 @@
 import tensorflow as tf
 import numpy as np
 import time
+import os.path
 
 def loadSamples(m, fileName):
-    try:
-        with open(fileName, 'r') as f:
-            lines = f.readlines()
+    if not os.path.exists(fileName):
+        return generateSamples(m, fileName)
 
-            X = []
-            for line in lines[:-1]:
-                X.append(line.split()[:m])
+    with open(fileName, 'r') as f:
+        lines = f.readlines()
 
-            Y = lines[-1].split()
+        X = []
+        for line in lines[:-1]:
+            X.append(line.split())
 
-        return [np.array(X, dtype=np.float128), np.array(Y, dtype=int)]
+        Y = lines[-1].split()
 
-    except FileNotFoundError:
-        print(fileName, "No file")
+    return [np.array(X, dtype=np.float128), np.array(Y, dtype=int)]
+
+def saveSamples(X, Y, fileName):
+    lines = ""
+
+    for i in range(len(X)):
+        for j in range(len(X[0])):
+            lines += str(X[i][j]) + " "
+        
+        lines = lines[:-1] + "\n"
+
+    for i in range(len(Y)):
+        lines += str(Y[i]) + " "
+    lines = lines[:-1]
+
+    with open(fileName, 'w') as f:
+        f.write(lines)
+
+def generateSamples(m, fileName):
+    x1, x2, y = [], [], []
+
+    for i in range(m):
+        x1.append(random.uniform(-10, 10))
+        x2.append(random.uniform(-10, 10))
+
+        if x1[-1] + x2[-1] > 0:
+            y.append(1)
+        else:
+            y.append(0)
+
+    X = np.array([x1, x2])
+    Y = np.array(y)
+
+    saveSamples(X, Y, fileName)
+
+    return X, Y
 
 """
 Input: 2-dim vector, 𝒙 = {𝑥1, 𝑥2}
@@ -43,10 +78,10 @@ model.compile(optimizer='sgd', loss = 'binary_crossentropy', metrics=['accuracy'
 # model.compile(optimizer='adam', loss = 'binary_crossentropy', metrics=['accuracy'])
 
 start = time.time()
-# model.fit(X_train.T, Y_train, epochs=10, verbose = 0)
-model.fit(X_train.T, Y_train, epochs=10, verbose = 0, batch_size = 4)
-# model.fit(X_train.T, Y_train, epochs=10, verbose = 0, batch_size = 32)
-# model.fit(X_train.T, Y_train, epochs=10, verbose = 0, batch_size = 128)
+# model.fit(X_train.T, Y_train, epochs=K, verbose = 0)
+# model.fit(X_train.T, Y_train, epochs=K, verbose = 0, batch_size = 4)
+# model.fit(X_train.T, Y_train, epochs=K, verbose = 0, batch_size = 32)
+model.fit(X_train.T, Y_train, epochs=K, verbose = 0, batch_size = 128)
 
 print("train time :", time.time() - start)
 
